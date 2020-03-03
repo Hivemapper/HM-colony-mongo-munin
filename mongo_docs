@@ -7,14 +7,16 @@ import sys
 import os
 import pymongo
 
+
 def getServerStatus():
-    host = "127.0.0.1"
-    port = 27017
-    c = pymongo.MongoClient(host, port)
+    if 'MONGO_DB_URI' in os.environ:
+      c = pymongo.MongoClient(os.environ['MONGO_DB_URI'])
+    else:
+      c = pymongo.MongoClient()
+
     return c.admin.command('serverStatus', workingSet=True)
 
 name = "documents"
-
 
 def doData():
     ss = getServerStatus()
@@ -34,6 +36,7 @@ def doConfig():
         print k + ".type COUNTER"
         print k + ".max 500000"
         print k + ".draw LINE1"
+
 
 if __name__ == "__main__":
 
