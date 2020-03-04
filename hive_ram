@@ -54,7 +54,7 @@ def doConfig():
         print(kname + ".info " + k["description"])
         print kname + ".type GAUGE"
         print kname + ".min 0"
-        print kname + ".draw STACK"
+        print kname + ".draw AREASTACK"
 
 if __name__ == "__main__":
 
