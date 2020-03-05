@@ -61,7 +61,7 @@ if __name__ == "__main__":
     if 'HIVE_DB_URI' in environ:
         uri = environ['HIVE_DB_URI']
 
-if len(sys.argv) > 1 and sys.argv[1] == "config":
-    doConfig()
-else:
-    doData()
+    if len(sys.argv) > 1 and sys.argv[1] == "config":
+        doConfig()
+    else:
+        doData()
