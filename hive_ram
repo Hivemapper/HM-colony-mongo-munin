@@ -57,6 +57,9 @@ def doConfig():
         print kname + ".draw AREASTACK"
 
 if __name__ == "__main__":
+    from os import environ
+    if 'HIVE_DB_URI' in environ:
+        uri = environ['HIVE_DB_URI']
 
 if len(sys.argv) > 1 and sys.argv[1] == "config":
     doConfig()
