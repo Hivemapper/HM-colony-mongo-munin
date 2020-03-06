@@ -4,6 +4,7 @@ import sys
 import os
 import subprocess
 import pymongo
+import re
 
 def getModules():
     if 'HIVE_DB_URI' in os.environ:
@@ -12,35 +13,70 @@ def getModules():
     proj = {"$project" : {"_id" : 1.0, "description" : "$description","name" : "$name"}}
     return c["hive"].get_collection("hiveavailablemodules").aggregate([proj])
 
-def getModuleRequirements():
+def getModuleRequirements(ip):
     if 'HIVE_DB_URI' in os.environ:
         uri = os.environ['HIVE_DB_URI']
     c = pymongo.MongoClient(uri)
+
+    rgx = re.compile(".*"+ip+".*")
     pipeline = [
-        {"$project" : {
-            "_id" : 1,
-            "cpu" : "$hardware.cpu_when_gpu_available"}},
-        {"$lookup" : {
-            "from" : "hivejobs",
-            "let" : {"label_mods" : "$_id"},
+        { "$match" : { "hostname" : rgx }}, 
+        { "$project" : { "_id" : 1.0, "hostname" : 1.0, "name" : 1.0}}, 
+        { "$lookup" : { 
+            "from" : "hivemachines", 
+            "let" : { "hostname" : "$hostname"}, 
             "pipeline" : [
-                {"$match" : {"state" : "active"}},
-                {"$group" : {"_id" : "$current_module_name",
-                             "count" : {"$sum" : 1.0}}},
-                {"$match" : {"$expr" : {"$eq" : [{"$concat" : ["hive_",{"$substr" : ["$_id",5.0,-1.0]}]},
-                                                 "$$label_mods"]}}}],
-            "as" : "jobs"}},
-        {"$unwind" : {"path" : "$jobs"}},
-        {"$project" : {
-            "_id" : 1.0,
-            "module_count" : "$jobs.count",
-            "cpu_usage" : {"$multiply" : ["$jobs.count","$cpu"]}}}]
-    return c["hive"].get_collection("hiveavailablemodules").aggregate(pipeline)
+              { "$match" : { "$expr" : {"$eq" : ["$$hostname", "$name"]}}}, 
+              { "$project" : { 
+                  "_id" : 0.0, 
+                  "gpu_usage" : { "$cond" : [{ "$gt" : ["$hardware.gpu.usage", 0.0]}, 1, 0]}, 
+                  "gpu_avail" : { "$cond" : [{ "$eq" : ["$hardware.gpu.usage", 0.0]}, 1, 0]}}}], 
+            "as" : "machines"}}, 
+        { "$unwind" : { 
+            "path" : "$machines"}}, 
+        { "$lookup" : { 
+            "from" : "hiveavailablemodules", 
+            "let" : { 
+              "module_id" : "$_id", 
+              "hostname" : "$hostname", 
+              "name" : "$name", 
+              "gpu_usage" : "$machines.gpu_usage", 
+              "gpu_avail" : "$machines.gpu_avail"}, 
+            "pipeline" : [
+              { "$match" : { "$expr" : { "$eq" : [{ "$concat" : ["hive.", { "$substr" : ["$_id", 5.0, -1.0]}]}, "$$name"]}}}, 
+              { "$project" : { 
+                  "_id" : 0.0, 
+                  "cpu_when_gpu" : { "$multiply" : ["$hardware.cpu_when_gpu_available", "$$gpu_avail"]}, 
+                  "cpu" : { 
+                    "$multiply" : [
+                      {"$multiply" : ["$hardware.cpu", { "$subtract" : [1, "$$gpu_avail"]}]}, 
+                      {"$subtract" : [1, { "$multiply" : ["$hardware.gpu", "$$gpu_usage"]}]}]}, 
+                  "gpu" : { "$multiply" : ["$hardware.gpu", "$$gpu_usage"]}, 
+                  "ram" : "$hardware.ram"}}], 
+            "as" : "active_module"}}, 
+        { "$unwind" : {"path" : "$active_module"}}, 
+        { "$project" : { "name" : "$name", 
+            "total_cpu" : { "$sum" : ["$active_module.cpu", "$active_module.cpu_when_gpu"]}, 
+            "gpu" : "$active_module.gpu", 
+            "ram" : "$active_module.ram"}}, 
+        { "$group" : { "_id" : "$name", 
+            "cpu" : {"$sum" : "$total_cpu"}, 
+            "ram" : {"$sum" : "$ram"}, 
+            "gpu" : {"$sum" : "$gpu"}}}]
+
+    return c["hive"].get_collection("hivemodules").aggregate(pipeline)
+
+def get_ip():
+    ip_command = "ip route get 1 | awk '{print $NF;exit}'"
+    p = subprocess.Popen([ip_command], stdout=subprocess.PIPE, shell=True)
+    output = p.stdout.read().decode('utf-8')
+    ip = output.replace('.','-').strip()
+    return ip
 
 def doData():
-    for k in getModuleRequirements():
-        if k["_id"] == "hive_api": continue
-        print( k["_id"] + ".value " + str(k["cpu_usage"]) )
+    ip = get_ip()
+    for k in getModuleRequirements(ip):
+        print( k["_id"] + ".value " + str(k["cpu"]) )
 
 def doConfig():
     print "graph_title CPU Hive Requirements"
@@ -50,7 +86,6 @@ def doConfig():
     print "graph_total total"
     for k in getModules():
         kname = k["_id"]
-        if kname == "hive_api": continue
         print(kname + ".label " + k["name"])
         print(kname + ".info " + k["description"])
         print kname + ".type GAUGE"
