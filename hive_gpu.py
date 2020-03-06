@@ -11,7 +11,7 @@ def getModules():
         uri = os.environ['HIVE_DB_URI']
     c = pymongo.MongoClient(uri)
     proj = [
-        {"$match" : { "hardware.gpu": { $gt: 0 } }},
+        {"$match" : { "hardware.gpu": { "$gt": 0 } }},
         {"$project" : {"_id" : 1.0, "description" : "$description","name" : "$name"}}]
     return c["hive"].get_collection("hiveavailablemodules").aggregate(proj)
 
@@ -22,7 +22,7 @@ def getModuleRequirements(ip):
 
     rgx = re.compile(".*"+ip+".*")
     pipeline = [
-        { "$match" : { "hostname" : rgx }}, , 
+        { "$match" : { "hostname" : rgx }}, 
         { "$project" : { 
             "_id" : 1, 
             "hostname" : 1, 
