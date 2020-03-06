@@ -43,10 +43,10 @@ def doData():
         print( k["_id"] + ".value " + str(k["ram_usage"]) )
 
 def doConfig():
-    print "graph_title Hive RAM utilization"
+    print "graph_title Memory Hive Requirements"
     print "graph_args --base 1000 -l 0"
     print "graph_vlabel Memory (Gb)"
-    print "graph_category Hive"
+    print "graph_category system"
     print "graph_total total"
     for k in getModules():
         kname = k["_id"]
