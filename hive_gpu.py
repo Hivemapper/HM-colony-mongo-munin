@@ -10,8 +10,10 @@ def getModules():
     if 'HIVE_DB_URI' in os.environ:
         uri = os.environ['HIVE_DB_URI']
     c = pymongo.MongoClient(uri)
-    proj = {"$project" : {"_id" : 1.0, "description" : "$description","name" : "$name"}}
-    return c["hive"].get_collection("hiveavailablemodules").aggregate([proj])
+    proj = [
+        {"$match" : { "hardware.gpu": { $gt: 0 } }},
+        {"$project" : {"_id" : 1.0, "description" : "$description","name" : "$name"}}]
+    return c["hive"].get_collection("hiveavailablemodules").aggregate(proj)
 
 def getModuleRequirements(ip):
     if 'HIVE_DB_URI' in os.environ:
@@ -20,18 +22,20 @@ def getModuleRequirements(ip):
 
     rgx = re.compile(".*"+ip+".*")
     pipeline = [
-        { "$match" : { "hostname" : rgx }}, 
-        { "$project" : { "_id" : 1.0, "hostname" : 1.0, "name" : 1.0}}, 
+        { "$match" : { "hostname" : rgx }}, , 
+        { "$project" : { 
+            "_id" : 1, 
+            "hostname" : 1, 
+            "name" : { "$concat" : ["hive_", { "$substr" : ["$name", 5, -1 ]}]}}}, 
         { "$lookup" : { 
             "from" : "hivemachines", 
             "let" : { "hostname" : "$hostname"}, 
             "pipeline" : [
-              { "$match" : { "$expr" : {"$eq" : ["$$hostname", "$name"]}}}, 
+              { "$match" : { "$expr" : { "$eq" : ["$$hostname", "$name"]}}}, 
               { "$project" : { 
-                  "_id" : 0.0, 
-                  "gpu_usage" : { "$cond" : [{ "$gt" : ["$hardware.gpu.usage", 0.0]}, 1, 0]}, 
-                  "gpu_avail" : { "$cond" : [{ "$eq" : ["$hardware.gpu.usage", 0.0]}, 1, 0]}}}], 
-            "as" : "machines"}}, 
+                  "_id" : 0, 
+                  "gpu_usage" : { "$cond" : [{ "$gt" : ["$hardware.gpu.usage", 0]}, 1, 0]}}}], 
+            "as" : "machines"}},
         { "$unwind" : { 
             "path" : "$machines"}}, 
         { "$lookup" : { 
@@ -40,29 +44,20 @@ def getModuleRequirements(ip):
               "module_id" : "$_id", 
               "hostname" : "$hostname", 
               "name" : "$name", 
-              "gpu_usage" : "$machines.gpu_usage", 
-              "gpu_avail" : "$machines.gpu_avail"}, 
+              "gpu_usage" : "$machines.gpu_usage"}, 
             "pipeline" : [
-              { "$match" : { "$expr" : { "$eq" : [{ "$concat" : ["hive.", { "$substr" : ["$_id", 5.0, -1.0]}]}, "$$name"]}}}, 
-              { "$project" : { 
-                  "_id" : 0.0, 
-                  "cpu_when_gpu" : { "$multiply" : ["$hardware.cpu_when_gpu_available", "$$gpu_avail"]}, 
-                  "cpu" : { 
-                    "$multiply" : [
-                      {"$multiply" : ["$hardware.cpu", { "$subtract" : [1, "$$gpu_avail"]}]}, 
-                      {"$subtract" : [1, { "$multiply" : ["$hardware.gpu", "$$gpu_usage"]}]}]}, 
-                  "gpu" : { "$multiply" : ["$hardware.gpu", "$$gpu_usage"]}, 
-                  "ram" : "$hardware.ram"}}], 
+              { "$match" : { 
+                  "$expr" : { "$eq" : ["$_id", "$$name"]}, 
+                  "hardware.gpu" : { "$gt" : 0}}}, 
+              { "$project" : { "_id" : 0, 
+                  "gpu" : { "$multiply" : ["$hardware.gpu", "$$gpu_usage"]}}}], 
             "as" : "active_module"}}, 
-        { "$unwind" : {"path" : "$active_module"}}, 
-        { "$project" : { "name" : "$name", 
-            "total_cpu" : { "$sum" : ["$active_module.cpu", "$active_module.cpu_when_gpu"]}, 
-            "gpu" : "$active_module.gpu", 
-            "ram" : "$active_module.ram"}}, 
-        { "$group" : { "_id" : {"$concat" : ["hive_", {"$substr" : ["$name", 5.0, -1.0]}]}, 
-            "cpu" : {"$sum" : "$total_cpu"}, 
-            "ram" : {"$sum" : "$ram"}, 
-            "gpu" : {"$sum" : "$gpu"}}}]
+        { "$unwind" : { 
+            "path" : "$active_module"}}, 
+        { "$group" : { 
+            "_id" : "$name", 
+            "gpu" : { "$sum" : "$active_module.gpu"}}}] 
+
 
     return c["hive"].get_collection("hivemodules").aggregate(pipeline)
 
