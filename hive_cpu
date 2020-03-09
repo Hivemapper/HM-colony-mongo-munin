@@ -46,10 +46,10 @@ def getModuleRequirements(ip):
               { "$match" : { "$expr" : { "$eq" : [{ "$concat" : ["hive.", { "$substr" : ["$_id", 5.0, -1.0]}]}, "$$name"]}}}, 
               { "$project" : { 
                   "_id" : 0.0, 
-                  "cpu_when_gpu" : { "$multiply" : ["$hardware.cpu_when_gpu_available", "$$gpu_avail"]}, 
+                  "cpu_when_gpu" : { "$multiply" : ["$hardware.cpu_when_gpu_available", "$$gpu_usage"]}, 
                   "cpu" : { 
                     "$multiply" : [
-                      {"$multiply" : ["$hardware.cpu", { "$subtract" : [1, "$$gpu_avail"]}]}, 
+                      {"$multiply" : ["$hardware.cpu", { "$subtract" : [1, "$$gpu_usage"]}]}, 
                       {"$subtract" : [1, { "$multiply" : ["$hardware.gpu", "$$gpu_usage"]}]}]}, 
                   "gpu" : { "$multiply" : ["$hardware.gpu", "$$gpu_usage"]}, 
                   "ram" : "$hardware.ram"}}], 
