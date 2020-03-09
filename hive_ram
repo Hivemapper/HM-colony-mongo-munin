@@ -39,30 +39,18 @@ def getModuleRequirements(ip):
             "let" : { 
               "module_id" : "$_id", 
               "hostname" : "$hostname", 
-              "name" : "$name", 
-              "gpu_usage" : "$machines.gpu_usage", 
-              "gpu_avail" : "$machines.gpu_avail"}, 
+              "name" : "$name"}, 
             "pipeline" : [
               { "$match" : { "$expr" : { "$eq" : [{ "$concat" : ["hive.", { "$substr" : ["$_id", 5.0, -1.0]}]}, "$$name"]}}}, 
               { "$project" : { 
-                  "_id" : 0.0, 
-                  "cpu_when_gpu" : { "$multiply" : ["$hardware.cpu_when_gpu_available", "$$gpu_avail"]}, 
-                  "cpu" : { 
-                    "$multiply" : [
-                      {"$multiply" : ["$hardware.cpu", { "$subtract" : [1, "$$gpu_avail"]}]}, 
-                      {"$subtract" : [1, { "$multiply" : ["$hardware.gpu", "$$gpu_usage"]}]}]}, 
-                  "gpu" : { "$multiply" : ["$hardware.gpu", "$$gpu_usage"]}, 
+                  "_id" : 0.0,  
                   "ram" : "$hardware.ram"}}], 
             "as" : "active_module"}}, 
         { "$unwind" : {"path" : "$active_module"}}, 
         { "$project" : { "name" : "$name", 
-            "total_cpu" : { "$sum" : ["$active_module.cpu", "$active_module.cpu_when_gpu"]}, 
-            "gpu" : "$active_module.gpu", 
             "ram" : "$active_module.ram"}}, 
         { "$group" : { "_id" : {"$concat" : ["hive_", {"$substr" : ["$name", 5.0, -1.0]}]}, 
-            "cpu" : {"$sum" : "$total_cpu"}, 
-            "ram" : {"$sum" : "$ram"}, 
-            "gpu" : {"$sum" : "$gpu"}}}]
+            "ram" : {"$sum" : "$ram"}}}]
 
     return c["hive"].get_collection("hivemodules").aggregate(pipeline)
 

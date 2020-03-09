@@ -51,17 +51,14 @@ def getModuleRequirements(ip):
                     "$multiply" : [
                       {"$multiply" : ["$hardware.cpu", { "$subtract" : [1, "$$gpu_usage"]}]}, 
                       {"$subtract" : [1, { "$multiply" : ["$hardware.gpu", "$$gpu_usage"]}]}]}, 
-                  "gpu" : { "$multiply" : ["$hardware.gpu", "$$gpu_usage"]}, 
-                  "ram" : "$hardware.ram"}}], 
+                  "gpu" : { "$multiply" : ["$hardware.gpu", "$$gpu_usage"]}}}], 
             "as" : "active_module"}}, 
         { "$unwind" : {"path" : "$active_module"}}, 
         { "$project" : { "name" : "$name", 
             "total_cpu" : { "$sum" : ["$active_module.cpu", "$active_module.cpu_when_gpu"]}, 
-            "gpu" : "$active_module.gpu", 
-            "ram" : "$active_module.ram"}}, 
+            "gpu" : "$active_module.gpu"}}, 
         { "$group" : { "_id" : {"$concat" : ["hive_", {"$substr" : ["$name", 5.0, -1.0]}]}, 
-            "cpu" : {"$sum" : "$total_cpu"}, 
-            "ram" : {"$sum" : "$ram"}, 
+            "cpu" : {"$sum" : "$total_cpu"},  
             "gpu" : {"$sum" : "$gpu"}}}]
 
     return c["hive"].get_collection("hivemodules").aggregate(pipeline)
