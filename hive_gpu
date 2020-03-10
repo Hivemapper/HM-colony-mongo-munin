@@ -34,7 +34,7 @@ def getModuleRequirements(ip):
               { "$match" : { "$expr" : { "$eq" : ["$$hostname", "$name"]}}}, 
               { "$project" : { 
                   "_id" : 0, 
-                  "gpu_usage" : { "$cond" : [{ "$gt" : ["$hardware.gpu.usage", 0]}, 1, 0]}}}], 
+                  "has_gpu" : { "$cond" : [{ "$gt" : ["$hardware.gpu.count", 0]}, 1,0]}}}],
             "as" : "machines"}},
         { "$unwind" : { 
             "path" : "$machines"}}, 
@@ -44,13 +44,13 @@ def getModuleRequirements(ip):
               "module_id" : "$_id", 
               "hostname" : "$hostname", 
               "name" : "$name", 
-              "gpu_usage" : "$machines.gpu_usage"}, 
+              "has_gpu" : "$machines.has_gpu"}, 
             "pipeline" : [
               { "$match" : { 
                   "$expr" : { "$eq" : ["$_id", "$$name"]}, 
                   "hardware.gpu" : { "$gt" : 0}}}, 
               { "$project" : { "_id" : 0, 
-                  "gpu" : { "$multiply" : ["$hardware.gpu", "$$gpu_usage"]}}}], 
+                  "gpu" : { "$multiply" : ["$hardware.gpu", "$$has_gpu"]}}}], 
             "as" : "active_module"}}, 
         { "$unwind" : { 
             "path" : "$active_module"}}, 
@@ -72,9 +72,10 @@ def doData():
     ip = get_ip()
     for k in getModuleRequirements(ip):
         print( k["_id"] + ".value " + str(k["gpu"]) )
+    print("baseline.value 0")
 
 def doConfig():
-    print "graph_title GPU Hive Requirements"
+    print "graph_title GPU hive requirements"
     print "graph_args --base 1000 -l 0"
     print "graph_vlabel GPU Used (1) or Unused (0)"
     print "graph_category system"
@@ -86,6 +87,12 @@ def doConfig():
         print kname + ".type GAUGE"
         print kname + ".min 0"
         print kname + ".draw AREASTACK"
+    kname = "baseline"
+    print(kname + ".label " + kname)
+    print(kname + ".info " + "Returns 0 if machine is on")
+    print kname + ".type GAUGE"
+    print kname + ".min 0"
+    print kname + ".draw AREASTACK"
 
 if __name__ == "__main__":
     from os import environ
