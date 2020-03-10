@@ -69,9 +69,10 @@ def doData():
     ip = get_ip()
     for k in getModuleRequirements(ip):
         print( k["_id"] + ".value " + str(k["cpu"]) )
+    print("background.value 0")
 
 def doConfig():
-    print "graph_title CPU Hive Requirements"
+    print "graph_title CPU hive requirements"
     print "graph_args --base 1000 -l 0"
     print "graph_vlabel CPUs"
     print "graph_category system"
@@ -83,6 +84,12 @@ def doConfig():
         print kname + ".type GAUGE"
         print kname + ".min 0"
         print kname + ".draw AREASTACK"
+    kname = "background"
+    print(kname + ".label " + kname)
+    print(kname + ".info " + "Returns 0 if machine is on")
+    print kname + ".type GAUGE"
+    print kname + ".min 0"
+    print kname + ".draw AREASTACK"
 
 if __name__ == "__main__":
     from os import environ
