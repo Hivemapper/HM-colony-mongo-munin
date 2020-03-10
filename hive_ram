@@ -63,7 +63,7 @@ def doData():
     ip = get_ip()
     for k in getModuleRequirements(ip):
         print( k["_id"] + ".value " + str(k["ram"]) )
-    print("background.value 0")
+    print("baseline.value 0")
 
 def doConfig():
     print "graph_title Memory hive requirements"
@@ -78,7 +78,7 @@ def doConfig():
         print kname + ".type GAUGE"
         print kname + ".min 0"
         print kname + ".draw AREASTACK"
-    kname = "background"
+    kname = "baseline"
     print(kname + ".label " + kname)
     print(kname + ".info " + "Returns 0 if machine is on")
     print kname + ".type GAUGE"
