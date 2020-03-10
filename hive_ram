@@ -28,9 +28,7 @@ def getModuleRequirements(ip):
             "pipeline" : [
               { "$match" : { "$expr" : {"$eq" : ["$$hostname", "$name"]}}}, 
               { "$project" : { 
-                  "_id" : 0.0, 
-                  "gpu_usage" : { "$cond" : [{ "$gt" : ["$hardware.gpu.usage", 0.0]}, 1, 0]}, 
-                  "gpu_avail" : { "$cond" : [{ "$eq" : ["$hardware.gpu.usage", 0.0]}, 1, 0]}}}], 
+                  "_id" : 0.0 }}], 
             "as" : "machines"}}, 
         { "$unwind" : { 
             "path" : "$machines"}}, 
