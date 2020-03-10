@@ -34,7 +34,7 @@ def getModuleRequirements(ip):
               { "$match" : { "$expr" : { "$eq" : ["$$hostname", "$name"]}}}, 
               { "$project" : { 
                   "_id" : 0, 
-                  "has_gpu" : { "$cond" : [{ "$gt" : ["$hardware.gpu.count", 0]}, 1,0]}}}],                   
+                  "has_gpu" : { "$cond" : [{ "$gt" : ["$hardware.gpu.count", 0]}, 1,0]}}}],
             "as" : "machines"}},
         { "$unwind" : { 
             "path" : "$machines"}}, 
