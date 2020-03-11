@@ -69,7 +69,7 @@ def doData():
     ip = get_ip()
     jj = {}
     for j in getModules():
-        jj[j["_id"]] = 0.0
+        jj[j["_id"]] = 0
     for k in getModuleRequirements(ip):
         jj[j["_id"]] += k["cpu"]
     for jkey, jval in jj.items():
