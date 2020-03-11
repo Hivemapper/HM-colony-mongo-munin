@@ -67,8 +67,13 @@ def get_ip():
 
 def doData():
     ip = get_ip()
+    jj = {}
+    for j in getModules():
+        jj[j["_id"]] = 0.0
     for k in getModuleRequirements(ip):
-        print( k["_id"] + ".value " + str(k["cpu"]) )
+        jj[j["_id"]] += k["cpu"]
+    for jkey, jval in jj.items():
+        print( jkey + ".value " + str(jval) )
 
 def doConfig():
     print "graph_title CPU hive requirements"

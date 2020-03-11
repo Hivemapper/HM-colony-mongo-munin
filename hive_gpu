@@ -74,7 +74,7 @@ def doData():
     for j in getModules():
         jj[j["_id"]] = 0.0
     for k in getModuleRequirements(ip):
-        jj[j["_id"]] += k["gpu"]    
+        jj[j["_id"]] += k["gpu"]
     for jkey, jval in jj.items():
         print( jkey + ".value " + str(jval) )
 
