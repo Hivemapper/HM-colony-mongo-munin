@@ -70,9 +70,13 @@ def get_ip():
 
 def doData():
     ip = get_ip()
+    jj = {}
+    for j in getModules():
+        jj[j["_id"]] = 0
     for k in getModuleRequirements(ip):
-        print( k["_id"] + ".value " + str(k["gpu"]) )
-    print("baseline.value 0")
+        jj[k["_id"]] += k["gpu"]
+    for jkey, jval in jj.items():
+        print( jkey + ".value " + str(jval) )
 
 def doConfig():
     print "graph_title GPU hive requirements"
@@ -87,12 +91,6 @@ def doConfig():
         print kname + ".type GAUGE"
         print kname + ".min 0"
         print kname + ".draw AREASTACK"
-    kname = "baseline"
-    print(kname + ".label " + kname)
-    print(kname + ".info " + "Returns 0 if machine is on")
-    print kname + ".type GAUGE"
-    print kname + ".min 0"
-    print kname + ".draw AREASTACK"
 
 if __name__ == "__main__":
     from os import environ
