@@ -10,14 +10,15 @@ def getModules():
     if 'HIVE_DB_URI' in os.environ:
         uri = os.environ['HIVE_DB_URI']
     c = pymongo.MongoClient(uri)
+    db_name = uri.split('/')[-1].strip()
     proj = {"$project" : {"_id" : 1.0, "description" : "$description","name" : "$name"}}
-    return c["hive"].get_collection("hiveavailablemodules").aggregate([proj])
+    return c[db_name].get_collection("hiveavailablemodules").aggregate([proj])
 
 def getModuleRequirements(ip):
     if 'HIVE_DB_URI' in os.environ:
         uri = os.environ['HIVE_DB_URI']
     c = pymongo.MongoClient(uri)
-
+    db_name = uri.split('/')[-1].strip()
     rgx = re.compile(".*"+ip+".*")
     pipeline = [
         { "$match" : { "hostname" : rgx }}, 
@@ -50,7 +51,7 @@ def getModuleRequirements(ip):
         { "$group" : { "_id" : {"$concat" : ["hive_", {"$substr" : ["$name", 5.0, -1.0]}]}, 
             "ram" : {"$sum" : "$ram"}}}]
 
-    return c["hive"].get_collection("hivemodules").aggregate(pipeline)
+    return c[db_name].get_collection("hivemodules").aggregate(pipeline)
 
 def get_ip():
     ip_command = "ip route get 1 | awk '{print $NF;exit}'"
