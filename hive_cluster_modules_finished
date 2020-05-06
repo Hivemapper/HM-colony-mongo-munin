@@ -70,7 +70,7 @@ def doConfig():
         print kname + ".min 0"
         print kname + ".draw AREASTACK"
 
-    kname = "hive_multireg"
+    kname = "Multi Registration"
     print(kname + ".label " + kname)
     print(kname + ".info " + kname)
     print kname + ".type GAUGE"

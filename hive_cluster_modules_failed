@@ -21,8 +21,15 @@ def getFailedJobs(module, ts, now):
     db_name = uri.split('/')[-1].strip()
     if module == "hive_imagery":
         return 0
+    if module == "hive_multireg":
+        return c[db_name].get_collection("hivejobs").find({"state_last_updated":{"$gt":ts,"$lte":now},
+                                                           "pipeline_name":"waggle_multireg",
+                                                           "state":"failed",
+                                                           "error_message":{"$ne":"Failed to register with sufficient confidence\n"},
+                                                           "current_module_name":"hive.georegistration"}).count()
     if module == "hive_georegistration":
         return c[db_name].get_collection("hivejobs").find({"state_last_updated":{"$gt":ts,"$lte":now},
+                                                           "pipeline_name":"waggle",
                                                            "state":"failed",
                                                            "error_message":{"$ne":"Failed to register with sufficient confidence\n"},
                                                            "current_module_name":module.replace("_", ".")}).count()
@@ -43,6 +50,7 @@ def doData():
         jj[j["_id"]] = getFailedJobs(j["_id"], ts, now)
     for jkey, jval in jj.items():
         print( jkey + ".value " + str(jval) )
+    print( "hive_multireg" + ".value " + str(getFailedJobs("hive_multireg", ts, now)) )
 
 def doConfig():
     print "graph_title Cluster failed jobs"
@@ -58,6 +66,13 @@ def doConfig():
         print kname + ".type GAUGE"
         print kname + ".min 0"
         print kname + ".draw AREASTACK"
+
+    kname = "Multi Registration"
+    print(kname + ".label " + kname)
+    print(kname + ".info " + kname)
+    print kname + ".type GAUGE"
+    print kname + ".min 0"
+    print kname + ".draw AREASTACK"
 
 
 if __name__ == "__main__":
