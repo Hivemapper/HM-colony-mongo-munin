@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import pymongo
+import datetime as dt
+import calendar
+
+knames = ["registered", "ungeoreg", "unsatreg", "failed"]
+def getModelData(ts, now):
+    if 'HIVE_DB_URI' in os.environ:
+        uri = os.environ['HIVE_DB_URI']
+    c = pymongo.MongoClient(uri)
+    db_name = uri.split('/')[-1].strip()
+    dd = {}
+    dd["registered"] = c[db_name].get_collection("hivejobs").find({"state_last_updated":{"$gt":ts,"$lte":now},
+                                                       "pipeline_name":"waggle",
+                                                       "state":"finished"}).count()
+    dd["ungeoreg"] = c[db_name].get_collection("hivejobs").find({"state_last_updated":{"$gt":ts,"$lte":now},
+                                                       "pipeline_name":"waggle","state":"failed",
+                                                       "current_module_name":"hive.georegistration",
+                                                       "error_message":"/Failed to register with sufficient confidence/"}).count()
+    dd["unsatreg"] = c[db_name].get_collection("hivejobs").find({"state_last_updated":{"$gt":ts,"$lte":now},
+                                                       "pipeline_name":"waggle",
+                                                       "state":"failed",
+                                                       "current_module_name":"hive.imagery"}).count()
+    dd["failed"] = c[db_name].get_collection("hivejobs").find({"state_last_updated":{"$gt":ts,"$lte":now},
+                                                       "$or":[{"pipeline_name":"waggle"},{"pipeline_name":"preprocessing"}],
+                                                       "state":"failed"}).count()
+    return dd
+
+def doData():
+    current = dt.datetime.utcnow()
+    # current_td = dt.timedelta(hours=current.hour, minutes=current.minute, seconds=current.second, microseconds=current.microsecond)
+    # TODO get last saved "current" value if exists or subtract 5 minutes from current
+    start = current - dt.timedelta(minutes=5)
+    # TODO current time for next use
+    ts = calendar.timegm(start.timetuple())
+    now = calendar.timegm(current.timetuple())
+    modelDict = getModelData(ts, now)
+    for jkey, jval in modelDict.items():
+        print( jkey + ".value " + str(jval) )
+
+def doConfig():
+    print "graph_title Cluster hive models"
+    print "graph_args --base 1000 -l 0"
+    print "graph_vlabel Number"
+    print "graph_category mongodb"
+    print "graph_total total"
+
+    for kname in knames:
+        print(kname + ".label " + kname)
+        print(kname + ".info " + kname)
+        print kname + ".type GAUGE"
+        print kname + ".min 0"
+        print kname + ".draw AREASTACK"
+
+
+if __name__ == "__main__":
+    from os import environ
+    if 'HIVE_DB_URI' in environ:
+        uri = environ['HIVE_DB_URI']
+
+    if len(sys.argv) > 1 and sys.argv[1] == "config":
+        doConfig()
+    else:
+        doData()
