@@ -17,7 +17,7 @@ def getPendingJobs(module):
         uri = os.environ['HIVE_DB_URI']
     c = pymongo.MongoClient(uri)
     db_name = uri.split('/')[-1].strip()
-    return c[db_name].get_collection("hivejobs").find({"state":"pending", "current_module_name":module.replace("_", ".")}).count()
+    return c[db_name].get_collection("hivejobs").find({"state":"pending", "current_module_name":module.replace("hive_", "hive.")}).count()
 
 def doData():
     jj = {}

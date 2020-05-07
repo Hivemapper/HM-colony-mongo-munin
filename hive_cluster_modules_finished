@@ -23,7 +23,7 @@ def getFinishedJobs(module, ts, now):
         return c[db_name].get_collection("hivejobs").find({"state_last_updated":{"$gt":ts,"$lte":now},
                                                            "$or":[{"state":"finished"},
                                                                   {"state":"failed"}],
-                                                           "current_module_name":module.replace("_", ".")}).count()
+                                                           "current_module_name":module.replace("hive_", "hive.")}).count()
     if module == "hive_multireg":
         return c[db_name].get_collection("hivejobs").find({"state_last_updated":{"$gt":ts,"$lte":now},
                                                            "pipeline_name":"waggle_multireg",
@@ -35,10 +35,10 @@ def getFinishedJobs(module, ts, now):
                                                            "pipeline_name":"waggle",
                                                            "$or":[{"state":"finished"},
                                                                   {"error_message":{"$ne":"Failed to register with sufficient confidence\n"}}],
-                                                           "current_module_name":module.replace("_", ".")}).count()
+                                                           "current_module_name":module.replace("hive_", "hive.")}).count()
     return c[db_name].get_collection("hivejobs").find({"state_last_updated":{"$gt":ts,"$lte":now},
                                                        "state":"finished",
-                                                       "current_module_name":module.replace("_", ".")}).count()
+                                                       "current_module_name":module.replace("hive_", "hive.")}).count()
 
 def doData():
     current = dt.datetime.utcnow()
@@ -71,11 +71,12 @@ def doConfig():
         print kname + ".draw AREASTACK"
 
     kname = "Multi Registration"
-    print(kname + ".label " + kname)
-    print(kname + ".info " + kname)
-    print kname + ".type GAUGE"
-    print kname + ".min 0"
-    print kname + ".draw AREASTACK"
+    kval = "hive_multireg"
+    print(kval + ".label " + kname)
+    print(kval + ".info " + kname)
+    print kval + ".type GAUGE"
+    print kval + ".min 0"
+    print kval + ".draw AREASTACK"
 
 
 if __name__ == "__main__":

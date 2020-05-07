@@ -24,9 +24,9 @@ def getActiveJobs(module):
     if module == "hive_georegistration":
         return c[db_name].get_collection("hivejobs").find({"state": "active",
                                                            "pipeline_name":"waggle",
-                                                           "current_module_name": module.replace("_", ".")}).count()
+                                                           "current_module_name": module.replace("hive_", "hive.")}).count()
     return c[db_name].get_collection("hivejobs").find({"state":"active",
-                                                       "current_module_name":module.replace("_", ".")}).count()
+                                                       "current_module_name":module.replace("hive_", "hive.")}).count()
 
 def doData():
     jj = {}
@@ -52,11 +52,12 @@ def doConfig():
         print kname + ".draw AREASTACK"
 
     kname = "Multi Registration"
-    print(kname + ".label " + kname)
-    print(kname + ".info " + kname)
-    print kname + ".type GAUGE"
-    print kname + ".min 0"
-    print kname + ".draw AREASTACK"
+    kval = "hive_multireg"
+    print(kval + ".label " + kname)
+    print(kval + ".info " + kname)
+    print kval + ".type GAUGE"
+    print kval + ".min 0"
+    print kval + ".draw AREASTACK"
 
 
 if __name__ == "__main__":
