@@ -28,7 +28,7 @@ def doData():
         print( jkey + ".value " + str(jval) )
 
 def doConfig():
-    print "graph_title Cluster pending GPU jobs"
+    print "graph_title Hive pending GPU jobs"
     print "graph_args --base 1000 -l 0"
     print "graph_vlabel Number"
     print "graph_category mongodb"
