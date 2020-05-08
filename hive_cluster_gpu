@@ -33,9 +33,11 @@ def getGPUs(now):
         uri = os.environ['HIVE_DB_URI']
     c = pymongo.MongoClient(uri)
     db_name = uri.split('/')[-1].strip()
-    gpuCursor = c[db_name].get_collection("hivemachines").aggregate([{"$match": {"keepalive_expiration_time": {"$gt": now}, "hardware.gpu.count": {"$gt": 0}}},{"$group": {"_id": "null", "total_gpus": {"$sum": "$hardware.gpu.count"}}}])
+    gpuCursor = c[db_name].get_collection("hivemachines").aggregate([{"$match": {"keepalive_expiration_time": {"$gt": now}, "hardware.gpu.count": {"$gt": 0}}},
+                                                                     {"$group": {"_id": "null", "total_gpus": {"$sum": "$hardware.gpu.count"}}}])
+    numGPUs = 0
     for j in gpuCursor:
-        numGPUs = j["total_gpus"]
+        numGPUs += j["total_gpus"]
     return numGPUs
 
 def doData():
