@@ -5,6 +5,7 @@ import os
 import pymongo
 import datetime as dt
 import calendar
+from os.path import expanduser
 
 def getModules():
     if 'HIVE_DB_URI' in os.environ:
@@ -28,25 +29,43 @@ def getFinishedJobs(module, ts, now):
         return c[db_name].get_collection("hivejobs").find({"state_last_updated":{"$gt":ts,"$lte":now},
                                                            "pipeline_name":"waggle_multireg",
                                                            "$or":[{"state":"finished"},
-                                                                  {"error_message":{"$ne":"Failed to register with sufficient confidence\n"}}],
+                                                                  {"error_message":"Failed to register with sufficient confidence\n"}],
                                                            "current_module_name":"hive.georegistration"}).count()
     if module == "hive_georegistration":
         return c[db_name].get_collection("hivejobs").find({"state_last_updated":{"$gt":ts,"$lte":now},
                                                            "pipeline_name":"waggle",
                                                            "$or":[{"state":"finished"},
-                                                                  {"error_message":{"$ne":"Failed to register with sufficient confidence\n"}}],
+                                                                  {"error_message":"Failed to register with sufficient confidence\n"}],
                                                            "current_module_name":module.replace("hive_", "hive.")}).count()
     return c[db_name].get_collection("hivejobs").find({"state_last_updated":{"$gt":ts,"$lte":now},
-                                                       "state":"finished",
+                                                       "$or":[{"state":"finished"},
+                                                              {"error_message":{"$regex":"^Pulled 0 points\. .*Geo-Registration)).*$"}}],
                                                        "current_module_name":module.replace("hive_", "hive.")}).count()
 
 def doData():
     current = dt.datetime.utcnow()
-    # current_td = dt.timedelta(hours=current.hour, minutes=current.minute, seconds=current.second, microseconds=current.microsecond)
-    # TODO figure out good time stamp 5 minutes ago
-    start = current - dt.timedelta(minutes=5)
-    ts = calendar.timegm(start.timetuple())
     now = calendar.timegm(current.timetuple())
+    homedir = expanduser("~")
+    timedir = os.path.join(homedir, 'dbtimes')
+    if not os.path.exists(timedir):
+      os.makedirs(timedir)
+    timefile = os.path.join(timedir, os.path.basename(__file__) + ".time")
+    ts = 0
+    # Get last saved "now" value as "ts" if exists or subtract 5 minutes from current
+    if os.path.exists(timefile):
+        with open(timefile, 'r') as f:
+            ts = map(int, f.readlines())[0]
+        # print("Got ", ts)
+    with open(timefile, 'w') as f:
+        # save now for next use
+        f.write('%d\n' % now)
+        # print("Saved ", now)
+    if ts < 1589233177 or ts >= now:
+        start = current - dt.timedelta(minutes=5)
+        ts = calendar.timegm(start.timetuple())
+    #     print("No valid saved value so using calculated ts of ", ts)
+    # else:
+    #     print("Using saved value ", ts)
 
     jj = {}
     for j in getModules():
