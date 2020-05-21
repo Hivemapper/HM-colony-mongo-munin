@@ -27,7 +27,7 @@ def getModuleRequirements(ip):
             "from" : "hivemachines", 
             "let" : { "hostname" : "$hostname"}, 
             "pipeline" : [
-              { "$match" : { "$expr" : {"$eq" : ["$$hostname", "$name"]}}}, 
+              { "$match" : {  "$expr": {"$and":[{"$eq":["$$hostname", "$name" ] },{"$eq":["$active", True ] }]}}}, 
               { "$project" : { 
                   "_id" : 0.0 }}], 
             "as" : "machines"}}, 
