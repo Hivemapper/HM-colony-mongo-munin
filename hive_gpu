@@ -21,7 +21,7 @@ def getModuleRequirements(ip):
         uri = os.environ['HIVE_DB_URI']
     c = pymongo.MongoClient(uri)
     db_name = uri.split('/')[-1].strip()
-    rgx = re.compile(".^"+ip+"."+".*")
+    rgx = re.compile("^"+ip+"."+".*")
     pipeline = [
         { "$match" : { "$or": [{ "hostname" : ip }, { "hostname" : rgx }]}}, 
         { "$project" : { 
