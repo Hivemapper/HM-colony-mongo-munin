@@ -19,9 +19,9 @@ def getModuleRequirements(ip):
         uri = os.environ['HIVE_DB_URI']
     c = pymongo.MongoClient(uri)
     db_name = uri.split('/')[-1].strip()
-    rgx = re.compile(".*"+ip+".*")
+    rgx = re.compile(".^"+ip+"."+".*")
     pipeline = [
-        { "$match" : { "hostname" : rgx }}, 
+        { "$match" : { "$or": [{ "hostname" : ip }, { "hostname" : rgx }]}}, 
         { "$project" : { "_id" : 1.0, "hostname" : 1.0, "name" : 1.0}}, 
         { "$lookup" : { 
             "from" : "hivemachines", 
@@ -58,6 +58,7 @@ def get_ip():
     p = subprocess.Popen([ip_command], stdout=subprocess.PIPE, shell=True)
     output = p.stdout.read().decode('utf-8')
     ip = output.replace('.','-').strip()
+    ip = "ip-"+ip
     return ip
 
 def doData():
