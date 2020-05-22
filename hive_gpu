@@ -46,7 +46,7 @@ def getModuleRequirements(ip):
             "from" : "hivemachines", 
             "let" : { "hostname" : "$hostname"}, 
             "pipeline" : [
-              { "$match" : {  "$expr": {"$and":[{"$eq":["$$hostname", "$name" ] },{"$eq":["$active", True ] }]}}}, 
+              { "$match" : {  "$expr": {"$and":[{"$eq":["$$hostname", "$name" ] },{"$ne":["$active", False ] }]}}}, 
               { "$project" : { 
                   "_id" : 0, 
                   "has_gpu" : { "$cond" : [{ "$gt" : ["$hardware.gpu.count", 0]}, 1,0]}}}],
