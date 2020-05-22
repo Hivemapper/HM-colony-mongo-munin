@@ -12,9 +12,9 @@ def getPendingPriority(priority):
     return c[db_name].get_collection("hivejobs").find({"state":"pending", "priority":priority}).count()
 
 def doData():
-    print( "low-pri" + ".value " + str(getPendingPriority(100)) )
-    print( "med-pri" + ".value " + str(getPendingPriority(101)) )
-    print( "hi-pri" + ".value " + str(getPendingPriority(200)) )
+    print( "low_pri" + ".value " + str(getPendingPriority(100)) )
+    print( "med_pri" + ".value " + str(getPendingPriority(101)) )
+    print( "hi_pri" + ".value " + str(getPendingPriority(200)) )
 
 def doConfig():
     print "graph_title Hive pending priorities"
@@ -24,7 +24,7 @@ def doConfig():
     print "graph_total total"
 
     kname = "Low Priority"
-    kval = "low-pri"
+    kval = "low_pri"
     print(kval + ".label " + kname)
     print(kval + ".info " + kname)
     print kval + ".type GAUGE"
@@ -32,7 +32,7 @@ def doConfig():
     print kval + ".draw AREASTACK"
 
     kname = "Medium Priority"
-    kval = "med-pri"
+    kval = "med_pri"
     print(kval + ".label " + kname)
     print(kval + ".info " + kname)
     print kval + ".type GAUGE"
@@ -40,7 +40,7 @@ def doConfig():
     print kval + ".draw AREASTACK"
 
     kname = "High Priority"
-    kval = "hi-pri"
+    kval = "hi_pri"
     print(kval + ".label " + kname)
     print(kval + ".info " + kname)
     print kval + ".type GAUGE"
