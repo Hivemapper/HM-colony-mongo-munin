@@ -21,18 +21,22 @@ def getModuleRequirements(ip):
     db_name = uri.split('/')[-1].strip()
     rgx = re.compile("^"+ip+"\..*")
     pipeline = [
-        { "$match": {"state":"active"}},
-        { "$lookup": {
-          "from": "hivemodules",
-          "let" : {
-            "module_id" : "$current_module_id"},
-          "pipeline" : [
-            {"$project": {"_id": "$_id", "hostname": "$hostname", "name":"$name"}},
-            {"$match" : {"$expr" : {"$eq" : ["$$module_id","$_id"]}}}],
-          "as" : "activejobs"}},
-        { "$unwind": {"path": "$activejobs"}},    
-        { "$project": { "_id": "$current_module_id", "hostname": "$activejobs.hostname", "name": "$activejobs.name"}},
         { "$match" : { "$or": [{ "hostname" : ip }, { "hostname" : rgx }]}}, 
+        {"$lookup": {
+          "from": "hivejobs",
+          "let" : {
+            "module_id" : "$_id"},
+          "pipeline" : [
+          {"$match" : {"state": "active"}},
+          {"$project": {"_id": "$current_module_id", "state": "$state"}},
+          {"$match" : {"$expr" : {"$eq" : ["$$module_id","$_id"]}}}],
+          "as" : "activejobs"}},    
+        {"$unwind": {
+            "path": "$activejobs",
+            "preserveNullAndEmptyArrays":true}},
+        { "$match": {
+              "$or":[{"activejobs.state":"active"},{"name":"hive.api"}]}},
+        { "$project" : { "_id" : 1.0, "hostname" : 1.0, "name" : 1.0}}, 
         { "$lookup" : { 
             "from" : "hivemachines", 
             "let" : { "hostname" : "$hostname"}, 
@@ -67,7 +71,7 @@ def getModuleRequirements(ip):
             "cpu" : {"$sum" : "$total_cpu"},  
             "gpu" : {"$sum" : "$gpu"}}}]
 
-    return c[db_name].get_collection("hivejobs").aggregate(pipeline)
+    return c[db_name].get_collection("hivemodules").aggregate(pipeline)
 
 def get_ip():
     ip_command = "ip route get 1 | awk '{print $NF;exit}'"
