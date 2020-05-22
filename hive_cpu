@@ -33,7 +33,7 @@ def getModuleRequirements(ip):
           "as" : "activejobs"}},    
         {"$unwind": {
             "path": "$activejobs",
-            "preserveNullAndEmptyArrays":true}},
+            "preserveNullAndEmptyArrays":True}},
         { "$match": {
               "$or":[{"activejobs.state":"active"},{"name":"hive.api"}]}},
         { "$project" : { "_id" : 1.0, "hostname" : 1.0, "name" : 1.0}}, 
