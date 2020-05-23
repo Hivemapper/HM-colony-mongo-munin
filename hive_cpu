@@ -59,8 +59,9 @@ def getModuleRequirements(ip):
               { "$match" : { "$expr" : { "$eq" : [{ "$concat" : ["hive.", { "$substr" : ["$_id", 5.0, -1.0]}]}, "$$name"]}}}, 
               { "$project" : { 
                   "_id" : 0.0, 
-                  "cpu_when_gpu" : { "$multiply" : ["$hardware.cpu_when_gpu_available", "$$has_gpu"]}, 
-                  "cpu" : {"$multiply" : ["$hardware.cpu", { "$subtract" : [1, "$$has_gpu"]}]}, 
+                  "uses_gpu": {"$gt":[{"$multiply": ["$hardware.gpu", "$$has_gpu"]},0]},
+                  "cpu_when_gpu": {"$multiply": ["$hardware.cpu_when_gpu_available", {"$cond":["$uses_gpu",1,0]}]},
+                  "cpu": { "$multiply": ["$hardware.cpu",   {"$cond":["$uses_gpu",0,1]}]},
                   "gpu" : {"$multiply" : ["$hardware.gpu", "$$has_gpu"]}}}], 
             "as" : "active_module"}}, 
         { "$unwind" : {"path" : "$active_module"}}, 
