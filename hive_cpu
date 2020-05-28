@@ -19,15 +19,29 @@ def getModuleRequirements(ip):
         uri = os.environ['HIVE_DB_URI']
     c = pymongo.MongoClient(uri)
     db_name = uri.split('/')[-1].strip()
-    rgx = re.compile(".*"+ip+".*")
+    rgx = re.compile("^"+ip+"\..*")
     pipeline = [
-        { "$match" : { "hostname" : rgx }}, 
+        { "$match" : { "$or": [{ "hostname" : ip }, { "hostname" : rgx }]}}, 
+        {"$lookup": {
+          "from": "hivejobs",
+          "let" : {
+            "module_id" : "$_id"},
+          "pipeline" : [
+          {"$match" : {"state": "active"}},
+          {"$project": {"_id": "$current_module_id", "state": "$state"}},
+          {"$match" : {"$expr" : {"$eq" : ["$$module_id","$_id"]}}}],
+          "as" : "activejobs"}},    
+        {"$unwind": {
+            "path": "$activejobs",
+            "preserveNullAndEmptyArrays":True}},
+        { "$match": {
+              "$or":[{"activejobs.state":"active"},{"name":"hive.api"}]}},
         { "$project" : { "_id" : 1.0, "hostname" : 1.0, "name" : 1.0}}, 
         { "$lookup" : { 
             "from" : "hivemachines", 
             "let" : { "hostname" : "$hostname"}, 
             "pipeline" : [
-              { "$match" : { "$expr" : {"$eq" : ["$$hostname", "$name"]}}}, 
+              { "$match" : {  "$expr": {"$and":[{"$eq":["$$hostname", "$name" ] },{"$ne":["$active", False ] }]}}}, 
               { "$project" : { 
               "_id" : 0.0, 
               "has_gpu" : { "$cond" : [{ "$gt" : ["$hardware.gpu.count", 0]}, 1,0]}}}], 
@@ -45,8 +59,9 @@ def getModuleRequirements(ip):
               { "$match" : { "$expr" : { "$eq" : [{ "$concat" : ["hive.", { "$substr" : ["$_id", 5.0, -1.0]}]}, "$$name"]}}}, 
               { "$project" : { 
                   "_id" : 0.0, 
-                  "cpu_when_gpu" : { "$multiply" : ["$hardware.cpu_when_gpu_available", "$$has_gpu"]}, 
-                  "cpu" : {"$multiply" : ["$hardware.cpu", { "$subtract" : [1, "$$has_gpu"]}]}, 
+                  "uses_gpu": {"$gt":[{"$multiply": ["$hardware.gpu", "$$has_gpu"]},0]},
+                  "cpu_when_gpu": {"$multiply": ["$hardware.cpu_when_gpu_available", {"$cond":["$uses_gpu",1,0]}]},
+                  "cpu": { "$multiply": ["$hardware.cpu",   {"$cond":["$uses_gpu",0,1]}]},
                   "gpu" : {"$multiply" : ["$hardware.gpu", "$$has_gpu"]}}}], 
             "as" : "active_module"}}, 
         { "$unwind" : {"path" : "$active_module"}}, 
@@ -64,6 +79,7 @@ def get_ip():
     p = subprocess.Popen([ip_command], stdout=subprocess.PIPE, shell=True)
     output = p.stdout.read().decode('utf-8')
     ip = output.replace('.','-').strip()
+    ip = "ip-"+ip
     return ip
 
 def doData():
