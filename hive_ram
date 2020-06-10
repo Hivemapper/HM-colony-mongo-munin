@@ -68,11 +68,10 @@ def getModuleRequirements(ip):
     return c[db_name].get_collection("hivemodules").aggregate(pipeline)
 
 def get_ip():
-    ip_command = "ip route get 1 | awk '{print $NF;exit}'"
+    ip_command = "hostname"
     p = subprocess.Popen([ip_command], stdout=subprocess.PIPE, shell=True)
     output = p.stdout.read().decode('utf-8')
-    ip = output.replace('.','-').strip()
-    ip = "ip-"+ip
+    ip = output.strip()
     return ip
 
 def doData():
