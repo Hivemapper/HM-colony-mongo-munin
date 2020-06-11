@@ -28,7 +28,7 @@ def getModuleRequirements(ip):
             "module_id" : "$_id"},
           "pipeline" : [
           {"$match" : {"state": "active"}},
-          {"$project": {"_id": "$current_module_id", "state": "$state"}},
+          {"$project": {"_id": "$current_module_id", "state": "$state", "high_ram":"$high_ram"}},
           {"$match" : {"$expr" : {"$eq" : ["$$module_id","$_id"]}}}],
           "as" : "activejobs"}},    
         {"$unwind": {
@@ -36,7 +36,7 @@ def getModuleRequirements(ip):
             "preserveNullAndEmptyArrays":True}},
         { "$match": {
               "$or":[{"activejobs.state":"active"},{"name":"hive.api"}]}},
-        { "$project" : { "_id" : 1.0, "hostname" : 1.0, "name" : 1.0}}, 
+        { "$project" : { "_id" : 1.0, "hostname" : 1.0, "name" : 1.0, "high_ram":"$activejobs.high_ram"}}, 
         { "$lookup" : { 
             "from" : "hivemachines", 
             "let" : { "hostname" : "$hostname"}, 
@@ -52,12 +52,13 @@ def getModuleRequirements(ip):
             "let" : { 
               "module_id" : "$_id", 
               "hostname" : "$hostname", 
-              "name" : "$name"}, 
+              "name" : "$name",
+              "is_high_ram":"$high_ram"}, 
             "pipeline" : [
               { "$match" : { "$expr" : { "$eq" : [{ "$concat" : ["hive.", { "$substr" : ["$_id", 5.0, -1.0]}]}, "$$name"]}}}, 
               { "$project" : { 
                   "_id" : 0.0,  
-                  "ram" : "$hardware.ram"}}], 
+                  "ram": {"$cond":[ { "$ne": ["$$is_high_ram", True]  }, "$hardware.ram", "$hardware.ram_high"]}}}], 
             "as" : "active_module"}}, 
         { "$unwind" : {"path" : "$active_module"}}, 
         { "$project" : { "name" : "$name", 
