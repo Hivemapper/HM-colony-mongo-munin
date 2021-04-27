@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import os
@@ -32,33 +32,33 @@ def doData():
     for j in getModules():
         if j["hardware"]["gpu"] == 0:
             jj[j["_id"]] = getPendingJobs(j["_id"])
-    for jkey, jval in jj.items():
-        print( jkey + ".value " + str(jval) )
-    print( "hive_multireg" + ".value " + str(getPendingJobs("hive_multireg")) )
+    for jkey, jval in list(jj.items()):
+        print(( jkey + ".value " + str(jval) ))
+    print(( "hive_multireg" + ".value " + str(getPendingJobs("hive_multireg")) ))
 
 def doConfig():
-    print "graph_title Hive pending CPU jobs"
-    print "graph_args --base 1000 -l 0"
-    print "graph_vlabel Number"
-    print "graph_category mongodb"
-    print "graph_total total"
+    print("graph_title Hive pending CPU jobs")
+    print("graph_args --base 1000 -l 0")
+    print("graph_vlabel Number")
+    print("graph_category mongodb")
+    print("graph_total total")
 
     for k in getModules():
         if k["hardware"]["gpu"] == 0:
             kname = k["_id"]
-            print(kname + ".label " + k["name"])
-            print(kname + ".info " + k["description"])
-            print kname + ".type GAUGE"
-            print kname + ".min 0"
-            print kname + ".draw AREASTACK"
+            print((kname + ".label " + k["name"]))
+            print((kname + ".info " + k["description"]))
+            print(kname + ".type GAUGE")
+            print(kname + ".min 0")
+            print(kname + ".draw AREASTACK")
 
     kname = "Multi Registration"
     kval = "hive_multireg"
-    print(kval + ".label " + kname)
-    print(kval + ".info " + kname)
-    print kval + ".type GAUGE"
-    print kval + ".min 0"
-    print kval + ".draw AREASTACK"
+    print((kval + ".label " + kname))
+    print((kval + ".info " + kname))
+    print(kval + ".type GAUGE")
+    print(kval + ".min 0")
+    print(kval + ".draw AREASTACK")
 
 
 if __name__ == "__main__":

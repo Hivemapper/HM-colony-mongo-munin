@@ -1,38 +1,39 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ## GENERATED FILE - DO NOT EDIT
 
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import sys
-import os  
+import os
 import pymongo
 
-def getServerStatus():
+def getClient():
     if 'MONGO_DB_URI' in os.environ:
-      c = pymongo.MongoClient(os.environ['MONGO_DB_URI'])
+        return pymongo.MongoClient(os.environ['MONGO_DB_URI'])
     else:
-      c = pymongo.MongoClient()
+        return pymongo.MongoClient()
 
+def getServerStatus():
+    c = getClient()
     return c.admin.command('serverStatus', workingSet=True)
 
 def doData():
-    for k,v in getServerStatus()["opLatencies"].iteritems():
+    for k,v in getServerStatus()["opLatencies"].items():
         if v["ops"] != 0:
-            print( str(k) + ".value " + str(v["latency"]/v["ops"] ) )
+            print(( str(k) + ".value " + str(v["latency"]/v["ops"] ) ))
         else:
-            print( str(k) + ".value " + str(v["latency"] ) )
+            print(( str(k) + ".value " + str(v["latency"] ) ))
 
 def doConfig():
 
-    print "graph_title MongoDB mean ops latencies"
-    print "graph_args --base 1000 -l 0"
-    print "graph_vlabel microseconds/op"
-    print "graph_category MongoDB"
+    print("graph_title MongoDB mean ops latencies")
+    print("graph_args --base 1000 -l 0")
+    print("graph_vlabel microseconds/op")
+    print("graph_category MongoDB")
 
     for k in getServerStatus()["opLatencies"]:
-        print k + ".label " + k
-        print k + ".draw LINE1"
-
+        print(k + ".label " + k)
+        print(k + ".draw LINE1")
 
 if __name__ == "__main__":          
 	

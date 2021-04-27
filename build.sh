@@ -1,19 +1,26 @@
-#!/bin/sh
+#!/bin/bash
 
-for out in `ls src/body_*.py`
-do
-    echo $out
-    x=${out#src/body_}
-    x=${x%.py}
-    
-    out=mongo_$x
+for out in src/body_*.py ; do
+  [[ -e "${out}" ]] || break
 
-    echo "#!/usr/bin/env python" > $out
-    echo "" >> $out
-    echo "## GENERATED FILE - DO NOT EDIT" >> $out
-    cat src/header.py >> $out
-    cat src/body_$x.py >> $out
-    cat src/footer.py >> $out
-    chmod 755 $out
+  echo "${out}"
+  x="${out#src/body_}"
+  x="${x%.py}"
+
+  out="mongo_$x"
+
+  cat > "${out}" <<- "EOF"
+#!/usr/bin/env python3
+
+## GENERATED FILE - DO NOT EDIT
+EOF
+
+  {
+    cat "src/header.py" \
+    && cat "src/body_${x}.py" \
+    && cat "src/footer.py"
+  } >> "${out}"
+
+  chmod 755 "${out}"
 
 done

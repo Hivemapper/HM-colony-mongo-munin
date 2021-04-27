@@ -13,6 +13,7 @@ Plugins
 
 Requirements
 -----------
+* Python 3
 * MongoDB 2.4+
 * python/pymongo
 
@@ -23,20 +24,20 @@ Requirements
 
 Install pymongo:
 
-    sudo apt-get install pip
-    sudo apt-get install build-essential python-dev
-    sudo pip install pymongo
+    sudo apt-get install pip3
+    sudo apt-get install build-essential python3-dev
+    sudo python3 -m pip --upgrade pymongo
 
 
 #### Red Hat and Cent OS
 
-Enable the EPEL Repository:
+Install pip:
 
-    sudo yum -y install epel-release
-    
+    sudo yum -y install python3-pip
+
 Install pymongo:
 
-    sudo yum install pymongo
+    sudo python3 -m pip --upgrade pymongo
 
 
 ## Install plugins
@@ -44,11 +45,13 @@ Install pymongo:
     git clone https://github.com/comerford/mongo-munin.git /tmp/mongo-munin
     sudo cp /tmp/mongo-munin/mongo_* /usr/share/munin/plugins
     sudo ln -sf /usr/share/munin/plugins/mongo_btree /etc/munin/plugins/mongo_btree
+    sudo ln -sf /usr/share/munin/plugins/mongo_collections /etc/munin/plugins/mongo_collections
     sudo ln -sf /usr/share/munin/plugins/mongo_conn /etc/munin/plugins/mongo_conn
+    sudo ln -sf /usr/share/munin/plugins/mongo_docs /etc/munin/plugins/mongo_docs
     sudo ln -sf /usr/share/munin/plugins/mongo_lock /etc/munin/plugins/mongo_lock
     sudo ln -sf /usr/share/munin/plugins/mongo_mem /etc/munin/plugins/mongo_mem
     sudo ln -sf /usr/share/munin/plugins/mongo_ops /etc/munin/plugins/mongo_ops
-    sudo ln -sf /usr/share/munin/plugins/mongo_docs /etc/munin/plugins/mongo_docs
+    sudo ln -sf /usr/share/munin/plugins/mongo_page_faults /etc/munin/plugins/mongo_page_faults
     sudo chmod +x /usr/share/munin/plugins/mongo_*
     sudo service munin-node restart
 

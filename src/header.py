@@ -1,13 +1,15 @@
 
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import sys
-import os  
+import os
 import pymongo
 
-def getServerStatus():
+def getClient():
     if 'MONGO_DB_URI' in os.environ:
-      c = pymongo.MongoClient(os.environ['MONGO_DB_URI'])
+        return pymongo.MongoClient(os.environ['MONGO_DB_URI'])
     else:
-      c = pymongo.MongoClient()
+        return pymongo.MongoClient()
 
+def getServerStatus():
+    c = getClient()
     return c.admin.command('serverStatus', workingSet=True)
