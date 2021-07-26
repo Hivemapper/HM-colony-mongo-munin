@@ -8,9 +8,10 @@ import os
 import pymongo
 
 def getDatabasesStats():
-    host = "127.0.0.1"
-    port = 27017
-    c = pymongo.MongoClient(host, port)
+    if 'MONGO_DB_URI' in os.environ:
+      c = pymongo.MongoClient(os.environ['MONGO_DB_URI'])
+    else:
+      c = pymongo.MongoClient()
 
     dbs = {}
     for k in c.database_names():
